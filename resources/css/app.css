@@ -1,0 +1,187 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+body {
+    overflow-y: auto;
+}
+
+.app-shell {
+    position: relative;
+    background: #141414;
+    isolation: isolate;
+}
+
+.app-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 72px 72px;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-shell > main {
+    position: relative;
+    z-index: 1;
+}
+
+.filter-checkbox {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius:2px;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-secondary-hover);
+    display: inline-grid;
+    place-content: center;
+}
+
+.filter-checkbox::after {
+    content: '';
+    width: 14px;
+    height: 14px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white' stroke='white' stroke-width='1'><path fill-rule='evenodd' d='M16.707%205.293a1%201%200%20010%201.414l-8%208a1%201%200%2001-1.414%200l-4-4a1%201%200%20011.414-1.414L8%2012.586l7.293-7.293a1%201%200%20011.414%200z' clip-rule='evenodd'/></svg>")
+        no-repeat center / contain;
+    opacity: 0;
+}
+
+.filter-checkbox:checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.filter-checkbox:checked::after {
+    opacity: 1;
+}
+
+.filter-checkbox:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.filter-radio {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-secondary-hover);
+    position: relative;
+    display: inline-block;
+}
+
+.filter-radio::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: #ffffff;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.filter-radio:checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.filter-radio:checked::after {
+    opacity: 1;
+}
+
+.filter-radio:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner[type='number'] {
+    -moz-appearance: textfield;
+}
+
+.catalog-spinner {
+    border-radius: 9999px;
+    border: 2px solid var(--color-secondary-hover);
+    border-top-color: var(--color-text-primary);
+    animation: catalog-spin 0.7s linear infinite;
+}
+
+@keyframes catalog-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.catalog-sort-select {
+    appearance: none;
+    border: 1px solid var(--color-secondary-hover);
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23bfbfbf' stroke-width='2'><path d='M6 8l4 4 4-4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px 12px;
+}
+
+.catalog-sort-select:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.catalog-sort-select option {
+    background: var(--color-accent);
+    color: var(--color-text-primary);
+}
+
+.catalog-sort-select option:checked {
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+.truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@theme {
+    --font-sans: "Open Sans", "sans-serif";
+
+    --breakpoint-2xl: 1600px;
+    --breakpoint-xl: 1280px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-md: 768px;
+    --breakpoint-sm: 640px;
+    --breakpoint-xs: 400px;
+    --breakpoint-xxs: 320px;
+
+    --color-base: #141414; /* фон */
+
+    --color-accent: #1c1c1c; /* серый для блоков */
+    --color-accent-hover: #272727;
+
+    --color-primary: #4f39f6; /* фиол цвет */
+    --color-primary-hover: #432dd7;  /* фиол цвет при наведении */
+    
+    --color-secondary: #272727; /* для блоков внутри серого блока */
+    --color-secondary-hover: #333335; 
+
+    --color-input: #333335; /* для инпутов внутри серого блока */
+    --color-input-hover: #444445;
+
+    --color-text-primary: #bfbfbf;
+    --color-text-secondary: #838287;
+}
