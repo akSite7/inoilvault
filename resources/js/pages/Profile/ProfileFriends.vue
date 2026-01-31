@@ -109,7 +109,10 @@ onBeforeUnmount(() => {
 <template>
     <div class="w-full">
         <div class="max-w-[1440px] mx-auto p-5">
-            <div class="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
+            <div
+                class="grid items-start gap-6"
+                :class="is_owner ? 'lg:grid-cols-[2fr_1fr]' : 'lg:grid-cols-1'"
+            >
                 <div class="rounded bg-accent p-6 border border-secondary/60 flex flex-col" :class="!friendsList.length ? 'self-stretch' : ''">
                     <div class="flex items-center gap-1">
                         <h1 class="text-lg font-semibold">Друзья</h1>
@@ -183,7 +186,7 @@ onBeforeUnmount(() => {
                     <div ref="friendsLoadTrigger" class="h-1"></div>
                 </div>
 
-                <div class="space-y-6">
+                <div v-if="is_owner" class="space-y-6">
                     <div class="rounded bg-accent p-6 border border-secondary/60">
                         <div class="flex items-center gap-1">
                             <h2 class="text-sm font-semibold text-text-primary">Заявки в друзья</h2>
