@@ -36,8 +36,8 @@ const resend = () => {
                             <input
                                 id="code"
                                 v-model="form.code"
-                                class="w-full rounded-xs bg-secondary px-3 py-2 pr-10 text-sm text-text-primary focus:outline-none tracking-[0.35em]"
-                                type="password"
+                                class="w-full rounded-xs bg-secondary px-3 py-2 pr-10 text-sm text-text-primary focus:outline-none"
+                                type="text"
                                 inputmode="numeric"
                                 autocomplete="one-time-code"
                             />

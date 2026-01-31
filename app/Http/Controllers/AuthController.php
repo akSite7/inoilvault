@@ -61,7 +61,7 @@ class AuthController extends Controller
 
     public function showVerifyEmail(Request $request)
     {
-        return Inertia::render('Auth/VerifyEmail');
+        return Inertia::render('Auth/Verification');
     }
 
     public function verifyEmail(Request $request)
