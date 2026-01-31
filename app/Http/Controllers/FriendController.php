@@ -71,7 +71,7 @@ class FriendController extends Controller
                         'id' => $requestRow->requester->id,
                         'username' => $requestRow->requester->username,
                         'role' => $requestRow->requester->role ?? 'user',
-                        'avatar_url' => $requestRow->requester->avatar_path ? Storage::url($requestRow->requester->avatar_path) : '/images/placeholders/avatar-placeholder.png',
+                        'avatar_url' => $requestRow->requester->avatar_path ? Storage::url($requestRow->requester->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png',
                     ],
                 ];
             });
@@ -89,7 +89,7 @@ class FriendController extends Controller
                         'id' => $requestRow->addressee->id,
                         'username' => $requestRow->addressee->username,
                         'role' => $requestRow->addressee->role ?? 'user',
-                        'avatar_url' => $requestRow->addressee->avatar_path ? Storage::url($requestRow->addressee->avatar_path) : '/images/placeholders/avatar-placeholder.png',
+                        'avatar_url' => $requestRow->addressee->avatar_path ? Storage::url($requestRow->addressee->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png',
                     ],
                 ];
             });

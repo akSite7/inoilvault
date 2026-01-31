@@ -23,7 +23,7 @@ const submit = () => {
 
                 <form class="mt-6 space-y-4" @submit.prevent="submit">
                     <div>
-                        <label class="text-sm text-text-secondary" for="login">Никнейм</label>
+                        <label class="text-sm text-text-secondary" for="login">Логин или Электронная почта</label>
                         <input
                             id="login"
                             v-model="form.login"
