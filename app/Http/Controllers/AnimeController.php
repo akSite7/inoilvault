@@ -200,12 +200,12 @@ class AnimeController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->map(function (Comment $comment) use ($currentUser, $canModerate) {
-                $avatarUrl = $comment->user?->avatar_path ? Storage::url($comment->user->avatar_path) : '/images/placeholders/avatar-placeholder.png';
+                $avatarUrl = $comment->user?->avatar_path ? Storage::url($comment->user->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png';
                 $allReplies = $comment->replies->flatMap(function (Comment $reply) {
                     return collect([$reply])->merge($reply->replies ?? []);
                 });
                 $replies = $allReplies->sortBy('created_at')->map(function (Comment $reply) use ($currentUser, $canModerate) {
-                    $replyAvatar = $reply->user?->avatar_path ? Storage::url($reply->user->avatar_path) : '/images/placeholders/avatar-placeholder.png';
+                    $replyAvatar = $reply->user?->avatar_path ? Storage::url($reply->user->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png';
                     $replyReaction = 0;
                     if ($currentUser) {
                         $replyReaction = (int) ($reply->reactions->firstWhere('user_id', $currentUser->id)?->value ?? 0);
@@ -285,7 +285,7 @@ class AnimeController extends Controller
                 ? [
                     'id' => $currentUser->id,
                     'username' => $currentUser->username,
-                    'avatar_url' => $currentUser->avatar_path ? Storage::url($currentUser->avatar_path) : '/images/placeholders/avatar-placeholder.png',
+                    'avatar_url' => $currentUser->avatar_path ? Storage::url($currentUser->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png',
                 ]
                 : null,
         ]);

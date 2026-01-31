@@ -62,7 +62,7 @@ class UserAnimeListController extends Controller
                 return [
                     'id' => $friend->id,
                     'username' => $friend->username,
-                    'avatar_url' => $friend->avatar_path ? Storage::url($friend->avatar_path) : '/images/placeholders/avatar-placeholder.png',
+                    'avatar_url' => $friend->avatar_path ? Storage::url($friend->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png',
                 ];
             });
 

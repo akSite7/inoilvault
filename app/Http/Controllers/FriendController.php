@@ -42,7 +42,7 @@ class FriendController extends Controller
                 'id' => $friend->id,
                 'username' => $friend->username,
                 'role' => $friend->role ?? 'user',
-                'avatar_url' => $friend->avatar_path ? Storage::url($friend->avatar_path) : '/images/placeholders/avatar-placeholder.png',
+                'avatar_url' => $friend->avatar_path ? Storage::url($friend->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png',
             ];
         });
 

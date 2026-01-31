@@ -43,53 +43,10 @@ const cancelRequest = (id) => {
 const removeFriend = (id) => {
     router.delete(`/friends/${id}`, { preserveScroll: true });
 };
-const fakeAvatar = '/images/placeholders/avatar-placeholder.png';
-const roleForIndex = (index) => {
-    if (index % 13 === 0) return 'admin';
-    if (index % 9 === 0) return 'moderator';
-    return 'user';
-};
 
-const fakeFriends = Array.from({ length: 0 }, (_, index) => {
-    const id = index + 1;
-    return {
-        id,
-        username: `friend_${id}`,
-        avatar_url: fakeAvatar,
-        is_online: index % 3 !== 0,
-        role: roleForIndex(index),
-    };
-});
-
-const fakeIncoming = Array.from({ length: 0 }, (_, index) => {
-    const id = index + 101;
-    return {
-        id,
-        user: {
-            id,
-            username: `incoming_${index + 1}`,
-            avatar_url: fakeAvatar,
-            role: roleForIndex(index + 2),
-        },
-    };
-});
-
-const fakeOutgoing = Array.from({ length: 0 }, (_, index) => {
-    const id = index + 201;
-    return {
-        id,
-        user: {
-            id,
-            username: `outgoing_${index + 1}`,
-            avatar_url: fakeAvatar,
-            role: roleForIndex(index + 4),
-        },
-    };
-});
-
-const friendsList = computed(() => (props.friends.length ? props.friends : fakeFriends));
-const incomingList = computed(() => (props.incoming.length ? props.incoming : fakeIncoming));
-const outgoingList = computed(() => (props.outgoing.length ? props.outgoing : fakeOutgoing));
+const friendsList = computed(() => props.friends);
+const incomingList = computed(() => props.incoming);
+const outgoingList = computed(() => props.outgoing);
 
 const friendsInitialBatch = 36;
 const friendsBatchSize = 12;
