@@ -122,9 +122,16 @@ const heroRows = ref(
           ? [{ id: Number(props.anime.main_character_id) }]
           : [{ id: '' }],
 );
+const studioSearch = ref(
+    studioRows.value.map((row) => {
+        const found = localStudios.value.find((studio) => studio.id === row.id);
+        return found ? found.name : '';
+    }),
+);
+const studioDropdownOpen = ref(studioRows.value.map(() => false));
 const heroSearch = ref(
     heroRows.value.map((row) => {
-        const found = props.characters.find((character) => character.id === row.id);
+        const found = localCharacters.value.find((character) => character.id === row.id);
         return found ? found.name : '';
     }),
 );
@@ -310,19 +317,68 @@ const onRelatedSearchInput = (index) => {
     }
 };
 
+const getStudioOptions = (index) => {
+    const query = (studioSearch.value[index] || '').trim().toLowerCase();
+    const selectedId = Number(studioRows.value[index]?.id);
+    const selectedIds = studioRows.value
+        .map((row, rowIndex) => (rowIndex === index ? null : Number(row.id)))
+        .filter((id) => Number.isFinite(id) && id > 0);
+    return localStudios.value.filter((studio) => {
+        if (selectedId && studio.id === selectedId) return true;
+        if (selectedIds.includes(studio.id)) return false;
+        if (!query) return true;
+        return studio.name?.toLowerCase().includes(query);
+    });
+};
+
+const openStudioDropdown = (index) => {
+    studioDropdownOpen.value[index] = true;
+};
+
+const closeStudioDropdown = (index) => {
+    setTimeout(() => {
+        studioDropdownOpen.value[index] = false;
+    }, 150);
+};
+
+const selectStudio = (index, studio) => {
+    studioRows.value[index].id = studio.id;
+    studioSearch.value[index] = studio.name;
+    studioDropdownOpen.value[index] = false;
+};
+
+const onStudioSearchInput = (index) => {
+    const query = (studioSearch.value[index] || '').trim().toLowerCase();
+    const currentId = Number(studioRows.value[index]?.id);
+    if (!query) {
+        studioRows.value[index].id = '';
+        return;
+    }
+    const currentName = localStudios.value.find((item) => item.id === currentId)?.name?.toLowerCase();
+    if (currentName && currentName !== query) {
+        studioRows.value[index].id = '';
+    }
+};
+
 const addStudioRow = () => {
     if (studioRows.value.length >= 5) {
         return;
     }
     studioRows.value.push({ id: '' });
+    studioSearch.value.push('');
+    studioDropdownOpen.value.push(false);
 };
 
 const removeStudioRow = (index) => {
     if (studioRows.value.length === 1) {
         studioRows.value[0].id = '';
+        studioSearch.value[0] = '';
+        studioDropdownOpen.value[0] = false;
         return;
     }
     studioRows.value.splice(index, 1);
+    studioSearch.value.splice(index, 1);
+    studioDropdownOpen.value.splice(index, 1);
 };
 
 const addHeroRow = () => {
@@ -355,7 +411,7 @@ const getHeroOptions = (index) => {
     const selectedIds = heroRows.value
         .map((row, rowIndex) => (rowIndex === index ? null : Number(row.id)))
         .filter((id) => Number.isFinite(id) && id > 0);
-    return props.characters.filter((character) => {
+    return localCharacters.value.filter((character) => {
         if (selectedId && character.id === selectedId) return true;
         if (selectedIds.includes(character.id)) return false;
         if (!query) return true;
@@ -386,7 +442,7 @@ const onHeroSearchInput = (index) => {
         heroRows.value[index].id = '';
         return;
     }
-    const currentName = props.characters.find((item) => item.id === currentId)?.name?.toLowerCase();
+    const currentName = localCharacters.value.find((item) => item.id === currentId)?.name?.toLowerCase();
     if (currentName && currentName !== query) {
         heroRows.value[index].id = '';
     }
@@ -436,14 +492,9 @@ const createCharacter = async () => {
             return;
         }
 
-        const created = await response.json();
+        const createdRaw = await response.json();
+        const created = { ...createdRaw, id: Number(createdRaw.id) };
         localCharacters.value.push(created);
-        const emptyRow = heroRows.value.find((row) => !row.id);
-        if (emptyRow) {
-            emptyRow.id = created.id;
-        } else {
-            heroRows.value.push({ id: created.id });
-        }
         showCharacterModal.value = false;
     } catch (error) {
         newCharacterErrors.value = { name: ['Ошибка сети.'] };
@@ -479,13 +530,17 @@ const createStudio = async () => {
             return;
         }
 
-        const created = await response.json();
+        const createdRaw = await response.json();
+        const created = { ...createdRaw, id: Number(createdRaw.id) };
         localStudios.value.push(created);
-        const emptyRow = studioRows.value.find((row) => !row.id);
-        if (emptyRow) {
-            emptyRow.id = Number(created.id);
+        const emptyIndex = studioRows.value.findIndex((row) => !row.id);
+        if (emptyIndex >= 0) {
+            studioRows.value[emptyIndex].id = created.id;
+            studioSearch.value[emptyIndex] = created.name || '';
         } else if (studioRows.value.length < 5) {
-            studioRows.value.push({ id: Number(created.id) });
+            studioRows.value.push({ id: created.id });
+            studioSearch.value.push(created.name || '');
+            studioDropdownOpen.value.push(false);
         }
         closeStudioModal();
     } catch (error) {
@@ -693,15 +748,37 @@ const createStudio = async () => {
                                             :key="`studio-row-${index}`"
                                             class="grid gap-2 md:grid-cols-[1fr_auto] items-start"
                                         >
-                                            <select
-                                                v-model.number="studioRows[index].id"
-                                                class="w-full rounded-xs bg-secondary px-4 py-2 text-sm text-text-primary focus:outline-none"
-                                            >
-                                                <option value="" disabled hidden>Выберите студию</option>
-                                                <option v-for="studio in getAvailableStudios(index)" :key="studio.id" :value="studio.id">
-                                                    {{ studio.name }}
-                                                </option>
-                                            </select>
+                                            <div class="relative">
+                                                <input
+                                                    v-model="studioSearch[index]"
+                                                    class="w-full rounded-xs bg-secondary px-4 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    type="text"
+                                                    placeholder="Поиск студии..."
+                                                    @focus="openStudioDropdown(index)"
+                                                    @blur="closeStudioDropdown(index)"
+                                                    @input="onStudioSearchInput(index)"
+                                                />
+                                                <div
+                                                    v-if="studioDropdownOpen[index]"
+                                                    class="absolute z-20 mt-1 w-full max-h-48 overflow-auto rounded-xs border border-secondary bg-secondary p-1 shadow-lg"
+                                                >
+                                                    <button
+                                                        v-for="studio in getStudioOptions(index)"
+                                                        :key="studio.id"
+                                                        type="button"
+                                                        class="w-full rounded-xs px-3 py-2 text-left text-sm text-text-primary hover:bg-secondary-hover"
+                                                        @mousedown.prevent="selectStudio(index, studio)"
+                                                    >
+                                                        {{ studio.name }}
+                                                    </button>
+                                                    <div
+                                                        v-if="!getStudioOptions(index).length"
+                                                        class="px-3 py-2 text-xs text-text-secondary"
+                                                    >
+                                                        Ничего не найдено.
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <button
                                                 v-if="studioRows.length > 1"
                                                 class="rounded-xs bg-secondary px-3 py-2 text-sm text-text-secondary transition hover:bg-secondary-hover"
@@ -783,7 +860,7 @@ const createStudio = async () => {
                                         :key="`hero-row-${index}`"
                                         class="grid gap-2 md:grid-cols-[1fr_1fr_auto] items-start"
                                     >
-                                        <div class="space-y-2 relative">
+                                        <div class="relative">
                                             <input
                                                 v-model="heroSearch[index]"
                                                 class="w-full rounded-xs bg-secondary px-4 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
@@ -813,12 +890,7 @@ const createStudio = async () => {
                                                     Ничего не найдено.
                                                 </div>
                                             </div>
-                                            <div v-if="heroRows[index].id" class="text-xs text-text-secondary">
-                                                Выбрано: {{
-                                                    props.characters.find((item) => item.id === heroRows[index].id)?.name ||
-                                                        '—'
-                                                }}
-                                            </div>
+
                                         </div>
                                         <input
                                             :value="getVoiceActor(row.id)"
@@ -1130,3 +1202,7 @@ const createStudio = async () => {
         </div>
     </teleport>
 </template>
+
+
+
+

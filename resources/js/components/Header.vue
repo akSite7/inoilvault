@@ -45,6 +45,15 @@ const toggleSearch = () => {
     openSearch();
 };
 
+
+
+const clampText = (value, max = 25) => {
+    const text = String(value ?? '');
+    if (text.length <= max) return text;
+    if (max <= 3) return text.slice(0, max);
+    return `${text.slice(0, max - 3)}...`;
+};
+
 const fetchResults = async (value) => {
     try {
         searchLoading.value = true;
@@ -195,7 +204,7 @@ onBeforeUnmount(() => {
                             </svg>
                         </button>
 
-                        <div v-if="showSearch && searchQuery" class="absolute right-0 top-12 z-[540] w-[360px] rounded-xs bg-accent p-3 shadow-lg">
+                        <div v-if="showSearch && searchQuery" class="absolute right-11 top-12 z-[540] w-[360px] rounded-xs bg-accent p-3 shadow-lg">
                             <div v-if="searchLoading" class="text-xs text-text-secondary">Поиск...</div>
                             <div v-else-if="!searchResults.length" class="text-xs text-text-secondary">Ничего не найдено.</div>
                             <div v-else class="space-y-2">
@@ -210,8 +219,8 @@ onBeforeUnmount(() => {
                                         <img v-if="item.cover_url" :src="item.cover_url" alt="" class="h-full w-full object-cover" />
                                     </div>
                                     <div class="text-xs text-text-secondary">
-                                        <div class="text-sm text-text-primary">{{ item.title }}</div>
-                                        <div class="text-text-secondary">{{ item.alt_title }}</div>
+                                        <div class="text-sm text-text-primary">{{ clampText(item.title, 35) }}</div>
+                                        <div class="text-text-secondary">{{ clampText(item.alt_title, 35) }}</div>
                                         <div class="mt-1 text-text-secondary">
                                             {{ item.season_label || '-' }} | {{ item.type || '-' }}
                                         </div>
@@ -292,8 +301,8 @@ onBeforeUnmount(() => {
                                         <img v-if="item.cover_url" :src="item.cover_url" alt="" class="h-full w-full object-cover" />
                                     </div>
                                     <div class="text-xs text-text-secondary">
-                                        <div class="text-sm text-text-primary">{{ item.title }}</div>
-                                        <div class="text-text-secondary">{{ item.alt_title }}</div>
+                                        <div class="text-sm text-text-primary">{{ clampText(item.title, 25) }}</div>
+                                        <div class="text-text-secondary">{{ clampText(item.alt_title, 25) }}</div>
                                         <div class="mt-1 text-text-secondary">
                                             {{ item.season_label || '-' }} | {{ item.type || '-' }}
                                         </div>
@@ -328,4 +337,8 @@ onBeforeUnmount(() => {
         </div>
     </header>
 </template>
+
+
+
+
 

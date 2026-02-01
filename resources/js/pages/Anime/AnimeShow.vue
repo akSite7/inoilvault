@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, ref } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 
@@ -411,7 +411,11 @@ const prevFrame = () => {
                             </a>
                             <div class="text-xs mt-1 text-text-secondary">
                                 <a :href="`/anime/${item.id}`" class="text-sm text-text-primary hover:underline">
-                                    {{ item.title }}
+                                    {{
+                                        item.title && item.title.length > 20
+                                            ? `${item.title.slice(0, 20)}...`
+                                            : item.title
+                                    }}
                                 </a>
                                 <div class="mt-2">{{ formatRelatedMeta(item) }}</div>
                                 <div class="mt-1 text-text-secondary">{{ item.relation_type }}</div>
