@@ -219,8 +219,8 @@ onBeforeUnmount(() => {
                                         <img v-if="item.cover_url" :src="item.cover_url" alt="" class="h-full w-full object-cover" />
                                     </div>
                                     <div class="text-xs text-text-secondary">
-                                        <div class="text-sm text-text-primary">{{ clampText(item.title, 35) }}</div>
-                                        <div class="text-text-secondary">{{ clampText(item.alt_title, 35) }}</div>
+                                        <div class="text-sm text-text-primary">{{ clampText(item.title, 30) }}</div>
+                                        <div class="text-text-secondary">{{ clampText(item.alt_title, 30) }}</div>
                                         <div class="mt-1 text-text-secondary">
                                             {{ item.season_label || '-' }} | {{ item.type || '-' }}
                                         </div>
