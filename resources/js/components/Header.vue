@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
                                         </div>
                                         <div class="text-xs text-text-secondary">
                                             <div class="text-sm text-text-primary">{{ item.title }}</div>
-                                            <div class="whitespace-pre-line break-words overflow-wrap-anywhere">{{ formatNotificationMessage(item, 30) }}</div>
+                                            <div class="whitespace-pre-line break-words overflow-wrap-anywhere">{{ formatNotificationMessage(item, item.type === 'friend_request' ? 80 : 30) }}</div>
                                         </div>
                                     </Link>
                                     <button
