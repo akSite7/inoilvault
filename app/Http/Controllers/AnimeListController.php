@@ -34,4 +34,14 @@ class AnimeListController extends Controller
 
         return redirect()->back();
     }
+
+    public function destroy(Request $request, Anime $anime)
+    {
+        AnimeList::query()
+            ->where('user_id', $request->user()->id)
+            ->where('anime_id', $anime->id)
+            ->delete();
+
+        return redirect()->back();
+    }
 }

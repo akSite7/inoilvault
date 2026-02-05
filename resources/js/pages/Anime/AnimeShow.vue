@@ -205,9 +205,12 @@ const listOptions = [
     { value: 'dropped', label: 'Брошено', color: 'border-red-400' },
     { value: 'planned', label: 'Запланировано', color: 'border-yellow-400' },
 ];
+const removeListOption = { value: 'remove', label: 'Удалить из списка', color: 'border-red-400' };
 
 const availableListOptions = computed(() =>
-    listOptions.filter((option) => option.value !== selectedListStatus.value)
+    selectedListStatus.value
+        ? [...listOptions.filter((option) => option.value !== selectedListStatus.value), removeListOption]
+        : listOptions
 );
 
 const formatTimeAgo = (isoString) => {
@@ -312,11 +315,16 @@ const toggleListOptions = () => {
 };
 
 const selectListStatus = (value) => {
-    selectedListStatus.value = value;
     showListOptions.value = false;
     if (!props.current_user) {
         return;
     }
+    if (value === 'remove') {
+        selectedListStatus.value = '';
+        router.delete(`/anime/${props.anime.id}/list`, { preserveScroll: true });
+        return;
+    }
+    selectedListStatus.value = value;
     router.post(
         `/anime/${props.anime.id}/list`,
         { status: value },
@@ -376,11 +384,11 @@ const prevFrame = () => {
                             {{ listOptions.find((option) => option.value === selectedListStatus)?.label || 'Добавить в список' }}
                         </button>
                         <transition
-                            enter-active-class="transition-all duration-300 ease-linear overflow-hidden"
+                            enter-active-class="transition-[max-height] duration-300 ease-linear overflow-hidden"
                             enter-from-class="max-h-0"
-                            enter-to-class="max-h-80"
-                            leave-active-class="transition-all duration-300 ease-linear overflow-hidden"
-                            leave-from-class="max-h-80"
+                            enter-to-class="max-h-60"
+                            leave-active-class="transition-[max-height] duration-300 ease-linear overflow-hidden"
+                            leave-from-class="max-h-60"
                             leave-to-class="max-h-0"
                         >
                             <div v-if="showListOptions" class="space-y-2 overflow-hidden">

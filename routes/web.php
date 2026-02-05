@@ -105,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/friends/request/{friendRequest}', [FriendController::class, 'cancel'])->name('friends.cancel');
     Route::delete('/friends/{user}', [FriendController::class, 'remove'])->name('friends.remove');
     Route::post('/anime/{anime}/list', [AnimeListController::class, 'store'])->name('anime.list.store');
+    Route::delete('/anime/{anime}/list', [AnimeListController::class, 'destroy'])->name('anime.list.destroy');
     Route::post('/anime/{anime}/comments', [AnimeCommentController::class, 'store'])->name('anime.comments.store');
     Route::put('/anime/{anime}/comments/{comment}', [AnimeCommentController::class, 'update'])->name('anime.comments.update');
     Route::delete('/anime/{anime}/comments/{comment}', [AnimeCommentController::class, 'destroy'])->name('anime.comments.destroy');
