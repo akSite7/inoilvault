@@ -184,26 +184,34 @@ class AnimeController extends Controller
         }
 
         $canModerate = $currentUser && in_array($currentUser->role, ['admin', 'moderator'], true);
-
-        $comments = $anime->comments()
-            ->whereNull('parent_id')
+        $comments = Comment::query()
+            ->where('anime_id', $anime->id)
             ->with([
                 'user:id,username,avatar_path,role',
-                'replies.user:id,username,avatar_path,role',
-                'replies.parent.user:id,username',
-                'replies.reactions',
-                'replies.replies.user:id,username,avatar_path,role',
-                'replies.replies.parent.user:id,username',
-                'replies.replies.reactions',
+                'parent.user:id,username',
                 'reactions',
             ])
             ->orderByDesc('created_at')
-            ->get()
-            ->map(function (Comment $comment) use ($currentUser, $canModerate) {
+            ->get();
+
+        $commentsByParent = $comments->groupBy('parent_id');
+
+        $collectReplies = function ($parentId) use (&$collectReplies, $commentsByParent) {
+            $children = $commentsByParent->get($parentId, collect());
+            return $children->flatMap(function (Comment $child) use (&$collectReplies) {
+                return collect([$child])->merge($collectReplies($child->id));
+            });
+        };
+
+        $rootComments = $commentsByParent->get(null);
+        if ($rootComments === null) {
+            $rootComments = $commentsByParent->get('', collect());
+        }
+
+        $comments = $rootComments
+            ->map(function (Comment $comment) use ($currentUser, $canModerate, $collectReplies) {
                 $avatarUrl = $comment->user?->avatar_path ? Storage::url($comment->user->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png';
-                $allReplies = $comment->replies->flatMap(function (Comment $reply) {
-                    return collect([$reply])->merge($reply->replies ?? []);
-                });
+                $allReplies = $collectReplies($comment->id);
                 $replies = $allReplies->sortBy('created_at')->map(function (Comment $reply) use ($currentUser, $canModerate) {
                     $replyAvatar = $reply->user?->avatar_path ? Storage::url($reply->user->avatar_path) : '/storage/images/placeholders/avatar-placeholder.png';
                     $replyReaction = 0;
@@ -224,7 +232,7 @@ class AnimeController extends Controller
                         'dislikes' => $reply->reactions->where('value', -1)->count(),
                         'user_reaction' => $replyReaction,
                         'can_edit' => $currentUser && $currentUser->id === $reply->user_id,
-                        'can_delete' => $canModerate,
+                        'can_delete' => $canModerate || ($currentUser && $currentUser->id === $reply->user_id),
                     ];
                 })->values();
 
@@ -245,7 +253,7 @@ class AnimeController extends Controller
                     'dislikes' => $comment->reactions->where('value', -1)->count(),
                     'user_reaction' => $commentReaction,
                     'can_edit' => $currentUser && $currentUser->id === $comment->user_id,
-                    'can_delete' => $canModerate,
+                    'can_delete' => $canModerate || ($currentUser && $currentUser->id === $comment->user_id),
                     'replies' => $replies,
                 ];
             })

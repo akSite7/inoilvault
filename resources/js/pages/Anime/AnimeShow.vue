@@ -1,5 +1,5 @@
-<script setup>
-import { computed, ref } from 'vue';
+﻿<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -114,6 +114,84 @@ const editBodies = ref({});
 const activeReplyId = ref(null);
 const activeEditId = ref(null);
 const hiddenReplies = ref({});
+const initHiddenReplies = (items = []) => {
+    const nextState = {};
+    items.forEach((comment) => {
+        if (comment.replies?.length) {
+            const existing = Object.prototype.hasOwnProperty.call(hiddenReplies.value, comment.id)
+                ? hiddenReplies.value[comment.id]
+                : undefined;
+            nextState[comment.id] = existing ?? true;
+        }
+    });
+    hiddenReplies.value = nextState;
+};
+
+watch(
+    () => props.comments,
+    (value) => {
+        initHiddenReplies(value || []);
+    },
+    { immediate: true },
+);
+const highlightedId = ref(null);
+const highlightTimer = ref(null);
+
+const isHighlighted = (id) => String(highlightedId.value) === String(id);
+
+const highlightComment = (id) => {
+    if (!id) return;
+    highlightedId.value = String(id);
+    if (highlightTimer.value) {
+        window.clearTimeout(highlightTimer.value);
+    }
+    highlightTimer.value = window.setTimeout(() => {
+        highlightedId.value = null;
+    }, 2500);
+};
+
+const findRootCommentId = (targetId) => {
+    const target = String(targetId);
+    for (const comment of props.comments) {
+        if (String(comment.id) === target) return comment.id;
+        if (Array.isArray(comment.replies) && comment.replies.some((reply) => String(reply.id) === target)) {
+            return comment.id;
+        }
+    }
+    return null;
+};
+
+const scrollToComment = async (targetId) => {
+    if (!targetId) return;
+    const rootId = findRootCommentId(targetId);
+    if (rootId && String(rootId) !== String(targetId)) {
+        hiddenReplies.value[rootId] = false;
+    }
+    await nextTick();
+    const targetEl = document.getElementById(`comment-${targetId}`);
+    if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightComment(targetId);
+    }
+};
+
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('comment');
+    if (!targetId) return;
+    const storedId = sessionStorage.getItem('scroll_comment_id');
+    const shouldScroll = sessionStorage.getItem('scroll_comment_once') === '1' && storedId === String(targetId);
+    if (!shouldScroll) return;
+    sessionStorage.removeItem('scroll_comment_id');
+    sessionStorage.removeItem('scroll_comment_once');
+    scrollToComment(targetId);
+});
+
+onBeforeUnmount(() => {
+    if (highlightTimer.value) {
+        window.clearTimeout(highlightTimer.value);
+    }
+});
 const showListOptions = ref(false);
 const showCoverModal = ref(false);
 const showFramesModal = ref(false);
@@ -454,11 +532,15 @@ const prevFrame = () => {
                 </div>
 
                 <div class="mt-6 space-y-6 text-sm" :class="{ 'pb-4': hasComments }">
-                    <div v-for="comment in comments" :key="comment.id" class="flex gap-3">
-                        <a :href="`/profile/${comment.user}`" class="shrink-0">
+                    <div v-for="comment in comments" :key="comment.id" :id="'comment-' + comment.id" class="relative flex gap-3 min-w-0 scroll-mt-24 transition">
+                        <span
+                            class="pointer-events-none absolute -inset-2 rounded-xs bg-secondary/50 transition-opacity duration-500 ease-out"
+                            :class="isHighlighted(comment.id) ? 'opacity-100' : 'opacity-0'"
+                        ></span>
+                        <a :href="`/profile/${comment.user}`" class="relative z-10 shrink-0">
                             <img :src="comment.avatar_url" alt="" class="h-13 w-13 rounded-xs object-cover" />
                         </a>
-                        <div class="flex-1">
+                        <div class="relative z-10 flex-1 min-w-0">
                             <div class="flex items-center gap-1 text-text-primary">
                                 <a :href="`/profile/${comment.user}`" class="font-semibold hover:underline">{{ comment.user }}</a>
                                 <span v-if="comment.role === 'admin'" class="inline-flex">
@@ -509,7 +591,7 @@ const prevFrame = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div v-else class="mt-1 text-text-secondary">
+                            <div v-else class="mt-1 text-text-secondary break-words overflow-wrap-anywhere max-w-full">
                                 {{ comment.text }}
                             </div>
                             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
@@ -571,7 +653,7 @@ const prevFrame = () => {
                                             <path d="M5.048 10.901H.016v14.846h5.032V10.9zM16.362.926L7.76 9.641a.573.573 0 0 0-.165.403v14.264c0 .167.073.326.2.435l1.32 1.13a.573.573 0 0 0 .372.139H23.43c.225 0 .429-.132.521-.337l4.409-9.745c1.127-3.758-1.1-5.6-2.434-6.09a.518.518 0 0 0-.18-.031h-7.519a.573.573 0 0 1-.566-.661l1.045-6.684a.573.573 0 0 0-.218-.544L17.117.873a.573.573 0 0 0-.755.053z"></path>
                                         </svg>
                                     </button>
-                                    <span>{{ comment.dislikes }}</span>
+                                    <span>{{ (comment.dislikes ?? 0) > 0 ? '-' + comment.dislikes : '0' }}</span>
                                 </div>
                             </div>
 
@@ -606,11 +688,15 @@ const prevFrame = () => {
                             </button>
 
                             <div v-if="comment.replies.length && !hiddenReplies[comment.id]" class="mt-4 space-y-4">
-                                <div v-for="reply in comment.replies" :key="reply.id" class="flex gap-3">
-                                    <a :href="`/profile/${reply.user}`" class="shrink-0">
+                                <div v-for="reply in comment.replies" :key="reply.id" :id="'comment-' + reply.id" class="relative flex gap-3 min-w-0 scroll-mt-24 transition">
+                                    <span
+                                        class="pointer-events-none absolute -inset-2 rounded-xs bg-secondary/50 transition-opacity duration-500 ease-out"
+                                        :class="isHighlighted(reply.id) ? 'opacity-100' : 'opacity-0'"
+                                    ></span>
+                                    <a :href="`/profile/${reply.user}`" class="relative z-10 shrink-0">
                                         <img :src="reply.avatar_url" alt="" class="h-13 w-13 rounded-xs object-cover" />
                                     </a>
-                                    <div class="flex-1">
+                                    <div class="relative z-10 flex-1 min-w-0">
                                         <div class="flex flex-wrap items-center gap-1 text-text-primary">
                                             <a :href="`/profile/${reply.user}`" class="font-semibold hover:underline">{{ reply.user }}</a>
                                             <span v-if="reply.role === 'admin'" class="inline-flex">
@@ -665,7 +751,7 @@ const prevFrame = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <div v-else class="mt-1 text-text-secondary">
+                                        <div v-else class="mt-1 text-text-secondary break-words overflow-wrap-anywhere max-w-full">
                                             {{ reply.text }}
                                         </div>
                                           <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
@@ -727,7 +813,7 @@ const prevFrame = () => {
                                                           <path d="M5.048 10.901H.016v14.846h5.032V10.9zM16.362.926L7.76 9.641a.573.573 0 0 0-.165.403v14.264c0 .167.073.326.2.435l1.32 1.13a.573.573 0 0 0 .372.139H23.43c.225 0 .429-.132.521-.337l4.409-9.745c1.127-3.758-1.1-5.6-2.434-6.09a.518.518 0 0 0-.18-.031h-7.519a.573.573 0 0 1-.566-.661l1.045-6.684a.573.573 0 0 0-.218-.544L17.117.873a.573.573 0 0 0-.755.053z"></path>
                                                       </svg>
                                                   </button>
-                                                  <span>{{ reply.dislikes }}</span>
+                                                  <span>{{ (reply.dislikes ?? 0) > 0 ? '-' + reply.dislikes : '0' }}</span>
                                               </div>
                                           </div>
                                           <div v-if="activeReplyId === reply.id && current_user" class="mt-3 space-y-2">

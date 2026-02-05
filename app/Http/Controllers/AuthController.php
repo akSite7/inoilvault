@@ -294,9 +294,11 @@ class AuthController extends Controller
 
         $animeCounts = [
             'total' => $listEntries->count(),
-            'episodes' => (int) $listEntries->sum(function (AnimeList $entry) {
-                return (int) ($entry->anime?->episodes ?? 0);
-            }),
+            'episodes' => (int) $listEntries
+                ->where('status', 'completed')
+                ->sum(function (AnimeList $entry) {
+                    return (int) ($entry->anime?->episodes ?? 0);
+                }),
             'watching' => $listEntries->where('status', 'watching')->count(),
             'completed' => $listEntries->where('status', 'completed')->count(),
             'on_hold' => $listEntries->where('status', 'on_hold')->count(),
@@ -552,3 +554,4 @@ class AuthController extends Controller
         };
     }
 }
+

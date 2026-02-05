@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FriendRequest;
 use App\Models\User;
+use App\Notifications\FriendRequestNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -135,6 +136,10 @@ class FriendController extends Controller
             'status' => 'pending',
         ]);
 
+        if ($user->id !== $actor->id) {
+            $user->notify(new FriendRequestNotification($actor));
+        }
+
         return redirect()->back();
     }
 
@@ -194,3 +199,7 @@ class FriendController extends Controller
         return redirect()->back();
     }
 }
+
+
+
+

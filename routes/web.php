@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -6,6 +6,7 @@ use App\Http\Controllers\AnimeController;
 use App\Http\Controllers\AnimeCommentController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\AnimeListController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserAnimeListController;
 use App\Http\Controllers\SourceController;
 use App\Http\Controllers\CharacterController;
@@ -93,7 +94,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/{username}/settings', [AuthController::class, 'updateProfile'])->name('profile.settings.update');
     Route::get('/profile/{username}', [AuthController::class, 'showProfile'])->name('profile.show');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/activity/ping', [AuthController::class, 'ping'])->name('activity.ping');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
     Route::get('/profile/{user:username}/friends', [FriendController::class, 'show'])->name('friends.show');
     Route::post('/friends/request/{user}', [FriendController::class, 'store'])->name('friends.request');
@@ -170,4 +173,7 @@ Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index');
 Route::get('/anime/search', [AnimeController::class, 'search'])->name('anime.search');
 Route::get('/anime/{anime}', [AnimeController::class, 'show'])->name('anime.show');
 Route::get('/profile/{username}/anime-list', [UserAnimeListController::class, 'show'])->name('profile.anime.list');
+
+
+
 
